@@ -6,4 +6,5 @@ step:4 download the documents and API and SDK files
 step:5 connect LPC through Host and import all Sdk files
 step:6 start programming for motors through LPC
 step:7 make a push button code for motors to check
+step:8 check your code with oscilloscope for pwm signals
 pocket beagle file
