@@ -11,4 +11,5 @@ step:9 if code debugs than load it in LPC
 step:10 make a small connection with DC motors and push button to run the LPC code
 step:11 try to run motor with push button for trial of forward, reverse, speed up and speed down
 step:12 get PIXY camera and try to connect through beaglebone black 
+step:13 try to make pixy recognize objects wit different colors with inbuilt programs.
 pocket beagle file
