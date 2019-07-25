@@ -1,0 +1,155 @@
+#include <stdio.h>
+#include "board.h"
+#include "peripherals.h"
+#include "pin_mux.h"
+#include "clock_config.h"
+#include "LPC54114_cm4.h"
+#include "fsl_debug_console.h"
+
+
+
+
+/* TODO: insert other include files here. */
+
+#include "fsl_ctimer.h"
+
+
+
+/* FreeRTOS kernel includes. */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "timers.h"
+#include "fsl_device_registers.h"
+
+/* Usart includes. */
+#include "fsl_usart_freertos.h"
+#include "fsl_usart.h"
+
+
+
+/* TODO: insert other definitions and declarations here. */
+
+
+#define CTIMER CTIMER0		// Timer 1
+#define CTIMER_CLK_FREQ CLOCK_GetFreq(kCLOCK_AsyncApbClk)
+
+#define LEFT_MOTOR1 kCTIMER_Match_0		//J2[9]
+#define LEFT_MOTOR2 kCTIMER_Match_2		//J2[7]
+
+
+#define RIGHT_MOTOR1 kCTIMER_Match_3		//J2[16]
+#define RIGHT_MOTOR2 kCTIMER_Match_1		//J1[10]
+
+
+#define DEMO_USART USART0
+#define DEMO_USART_IRQHandler FLEXCOMM0_IRQHandler
+#define DEMO_USART_IRQn FLEXCOMM0_IRQn
+
+
+
+/*
+ * @brief   Application entry point.
+ */
+
+const char *to_send;
+const char *send_buffer_overrun;
+uint8_t background_buffer[32];
+uint8_t recv_buffer[10];
+
+usart_rtos_handle_t handle;
+struct _usart_handle t_handle;
+
+struct rtos_usart_config usart_config = {
+    .baudrate = 115200,
+    .parity = kUSART_ParityDisabled,
+    .stopbits = kUSART_OneStopBit,
+    .buffer = background_buffer,
+    .buffer_size = sizeof(background_buffer),
+};
+
+
+
+void MotorsSetup()
+{
+	ctimer_config_t config;
+
+	CTIMER_GetDefaultConfig(&config);
+
+
+	    CTIMER_Init(CTIMER, &config);
+
+
+	    CTIMER_SetupPwm(CTIMER,LEFT_MOTOR1,0,24000U,CTIMER_CLK_FREQ,false);
+	    CTIMER_SetupPwm(CTIMER,LEFT_MOTOR2,0,24000U,CTIMER_CLK_FREQ,false);
+	    CTIMER_SetupPwm(CTIMER,RIGHT_MOTOR1,0,24000U,CTIMER_CLK_FREQ,false);
+	    CTIMER_SetupPwm(CTIMER,RIGHT_MOTOR2,0,24000U,CTIMER_CLK_FREQ,false);
+	    CTIMER_StartTimer(CTIMER);
+}
+
+void Move(uint8_t speed)
+{
+	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, speed);
+	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR2, 0);
+
+
+	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR1, 0);
+	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR2, speed);
+
+}
+
+
+void Turn_SlowLeft(){}
+void Turn_SlowRight(){}
+void Turn_Left(){}
+void Turn_Right(){}
+
+/* Api is used to stop the robot */
+
+void stop(){
+	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, 0);
+	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR2, 0);
+
+
+	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR1, 0);
+	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR2, 0);
+}
+
+
+
+void Reverse(){}
+
+static void Uart_task(void *pvParameters);
+static void Drive_task(void *pvParameters);
+
+
+int main(void) {
+
+  	/* Init board hardware. */
+    BOARD_InitBootPins();
+    BOARD_InitBootClocks();
+    BOARD_InitBootPeripherals();
+
+    /* Init FSL debug console. */
+    BOARD_InitDebugConsole();
+    MotorsSetup();
+
+
+    if (xTaskCreate(uart_task, "Uart_task", configMINIMAL_STACK_SIZE + 10, NULL, uart_task_PRIORITY, NULL) != pdPASS)
+       {
+           PRINTF("Task creation failed!.\r\n");
+           while (1)
+               ;
+       }
+
+    if (xTaskCreate(Drive_task, "Robot_driving_task", configMINIMAL_STACK_SIZE + 10, NULL, uart_task_PRIORITY, NULL) != pdPASS)
+          {
+              PRINTF("Task creation failed!.\r\n");
+              while (1)
+                  ;
+          }
+
+       vTaskStartScheduler();
+       for (;;)
+           ;
+   }
