@@ -13,4 +13,5 @@ step:11 try to run motor with push button for trial of forward, reverse, speed u
 step:12 get PIXY camera and try to connect through beaglebone black 
 step:13 try to make pixy recognize objects wit different colors with inbuilt programs.
 step:14 teach pixy to detect colors and define 7 colors
+step:15 after detecting colors, try to make code of tracking algorithm for pixy and BBB
 pocket beagle file
