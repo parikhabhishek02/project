@@ -1,0 +1,127 @@
+#include <iostream.h>
+#include <stdlib.h>
+#include <Pixy2.h>
+
+Pixy2 pixy;
+
+int signature = 0;
+int x = 0;                      //positon x axis
+int y = 0;                      //position y axis
+unsigned int width = 0;         //object's width
+unsigned int height = 0;        //object's height
+unsigned int area = 0;		//object's area
+unsigned int newarea = 0;	//object's newarea
+int Xmin = 70;                  //min x position
+int Xmax = 319;			//max x position
+int maxArea = 0;		//max area
+int minArea = 0;		//min area
+int direction1 = 5;             //direction1 on Pin D5
+int speed1 = 10;                //speed1 on Pin D10
+int direction2 = 7;             //direction2 on Pin D7
+int speed2 = 9;                 //speed2 on Pin D9
+int Speed = 70;                 //speed for motor
+static int i = 0;
+
+void setup()
+{ 
+  pinMode(direction1, OUTPUT);
+  pinMode(direction2, OUTPUT);
+  pinMode(speed11, OUTPUT);
+  pinMode(speed2, OUTPUT);
+  Serial.begin(115200);
+  Stop();
+  pixy.init();
+}
+
+void loop()
+{ 
+  while(millis()<5000)
+  {
+    scan();
+    area = width * height; //calculate the object area 
+    maxArea = area + 1000;
+    minArea = area - 1000;
+  }
+
+    scan(); 
+
+  if(signature > 0 && signature <= 7)//looking for signature objects from 0 to 7
+  {
+    newarea = width * height; //calculate the object area
+    
+      if (x < Xmin)//turn left if x position < max x position
+      {     
+       left();
+      }
+      else if (x > Xmax) //turn right if x position > max x position
+      {
+       right();
+      }
+      else if(newarea < minArea)//go forward if object too small
+      {
+       forward(); 
+      }
+      else if(newarea > maxArea)//go backward if object too big
+      {
+       backward(); 
+      }
+      
+      //else stop
+      else
+      {
+        Stop(); 
+      } 
+   }
+   else
+   {
+    Stop();
+     }
+}
+
+void backward()//backward
+  {
+  digitalWrite(direction1, LOW);
+  digitalWrite(direction2, LOW);
+  analogWrite(speed1, Speed*51/80);
+  analogWrite(speed2, Speed*51/80);
+  }
+
+void forward()//forward
+  {
+  digitalWrite(direction1, HIGH);
+  digitalWrite(direction2, HIGH);
+  analogWrite(speed1, Speed*51/80);
+  analogWrite(speed2, Speed*51/80);
+  }
+
+void right()//turn right
+  {
+  digitalWrite(direction1, HIGH);
+  digitalWrite(direction2, LOW);
+  analogWrite(speed1, Speed*51/80);
+  analogWrite(speed2, Speed*51/80); 
+  }
+
+void left()//turn left
+  {
+  digitalWrite(direction1, LOW);
+  digitalWrite(direction2, HIGH);
+  analogWrite(speed1, Speed*51/80);
+  analogWrite(speed2, Speed*51/80); 
+  }
+
+void Stop()//stop
+  {
+  digitalWrite(speed1, LOW);
+  digitalWrite(speed2, LOW);  
+  }
+void scan()
+  {
+  uint16_t blocks;
+  blocks = pixy.ccc.getBlocks();  //receive data from pixy 
+  signature = pixy.ccc.blocks[i].signature;    //get object's signature
+  x = pixy.ccc.blocks[i].x;                    //get x position
+  y = pixy.ccc.blocks[i].y;                    //get y position
+  width = pixy.ccc.blocks[i].width;            //get width
+  height = pixy.ccc.blocks[i].height;          //get height
+  }  

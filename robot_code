@@ -1,10 +1,3 @@
-/*
- * Copyright (c) 2015, Freescale Semiconductor, Inc.
- * Copyright 2016-2017 NXP
- * All rights reserved.
- * 
- * SPDX-License-Identifier: BSD-3-Clause
- */
 
 #include <stdio.h>
 #include "board.h"
@@ -27,10 +20,6 @@
 #include <stdbool.h>
 #include "fsl_ctimer.h"
 /* TODO: insert other definitions and declarations here. */
-
-/* Freescale includes. */
-#include "fsl_device_registers.h"
-
 
 
 #define CTIMER CTIMER0		// Timer 0
@@ -63,7 +52,9 @@ static void Drive_task(void *pvParameters);
 
 
 void MotorsSetup();
-void Forward();
+void Move();
+void Turn_SlowLeft();
+void Turn_SlowRight();
 void Turn_Left();
 void Turn_Right();
 void Stop();
@@ -84,7 +75,7 @@ struct rtos_usart_config usart_config = {
     .buffer_size = sizeof(background_buffer),
 };
 
-QueueHandle_t xQueue1;
+xQueueHandle queue1= NULL;
 
 /*
  * @brief   Application entry point.
@@ -99,36 +90,13 @@ int main(void) {
     BOARD_InitDebugConsole();
 
 
-  // MotorsSetup();
-
-    ctimer_config_t config;
-    		 uint32_t srcClock_Hz;
-    		 srcClock_Hz = CLOCK_GetFreq(kCLOCK_BusClk);
+   MotorsSetup();
 
 
 
-    	    CTIMER_GetDefaultConfig(&config);
 
 
-    	    CTIMER_Init(CTIMER, &config);
-
-    	    CTIMER_SetupPwm(CTIMER,LEFT_MOTOR1,80,20000,srcClock_Hz,NULL);
-    	    CTIMER_SetupPwm(CTIMER,LEFT_MOTOR2,80,20000,srcClock_Hz,NULL);
-    	    CTIMER_SetupPwm(CTIMER,RIGHT_MOTOR1,0,20000,srcClock_Hz,NULL);
-    	    CTIMER_SetupPwm(CTIMER,RIGHT_MOTOR2,0,20000,srcClock_Hz,NULL);
-    	    CTIMER_StartTimer(CTIMER);
-
-
-    	  	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, 80);
-    	  	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR2, 0);
-
-
-    	  	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR1, 0);
-    	  	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR2, 80);
-
-if (xQueue1 == NULL)
-
-    xQueue1=xQueueCreate(1,sizeof(char));
+    queue1=xQueueCreate(1,sizeof(char));
     if (xTaskCreate(uart_task, "Uart_task", configMINIMAL_STACK_SIZE + 10, NULL, 2, NULL) != pdPASS)
       {
           PRINTF("Task creation failed!.\r\n");
@@ -168,7 +136,7 @@ if (xQueue1 == NULL)
           if (n > 0)
           {
         		send=recv_buffer[0];
-        		xQueueSend(xQueue1,&send,10);
+        		xQueueSend(queue1,&send,10);
           }
       }
 
@@ -181,43 +149,37 @@ if (xQueue1 == NULL)
 	  char recv;
 
 	  	while(1){
-	  		xQueueReceive(xQueue1,&recv,10);
-	  		if(recv=='F')
+	  		xQueueReceive(queue1,&recv,10);
+	  		if(recv=='M')
 	  		{
-	  			Forward();
-	  			printf("forward\n");
-	  			recv='n';
+	  			Move();
+	  			printf("moving");
+	  			recv='-';
 	  		}
 	  		else if(recv=='L')
 	  		{
 	  			Turn_Left();
-	  			printf("left\n");
-	  			recv='n';
+	  			printf("left");
 	  		}
 	  		else if(recv=='R')
 	  		{
 	  			Turn_Right();
-	  			printf("right\n");
-	  			recv='n';
+	  			printf("right");
 	  		}
 	  		else if(recv=='S')
 	  		{
-
 	  			Stop();
 	  			printf("stop");
-	  			recv='n';
-
 	  		}
 	  		else if(recv=='B')
 	  		{
 	  			 Reverse();
-	  			 printf("reverse\n");
-	  			recv='n';
+	  			 printf("reverse");
 	  		}
 
+	  		printf("data is recived %s",recv);
 
-
-
+	  		vTaskDelay(100);
 	  	}
   }
 
@@ -244,7 +206,7 @@ if (xQueue1 == NULL)
   }
 
 
-  void Forward()
+  void Move()
   {
   	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, 80);
   	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR2, 0);
@@ -256,7 +218,25 @@ if (xQueue1 == NULL)
   }
 
 
+  void Turn_SlowLeft()
+  {
+  	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, 75);
+  		CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR2, 0);
 
+
+  		CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR1, 0);
+  		CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR2, 75);
+
+  }
+  void Turn_SlowRight()
+  {
+  	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, 75);
+  	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR2, 0);
+
+
+  		CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR1, 0);
+  		CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR2, 75);
+  }
   void Turn_Left()
   {
   	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, 100);
@@ -264,11 +244,11 @@ if (xQueue1 == NULL)
 
 
   	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR1, 0);
-  	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR2, 0);
+  	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR2, 100);
   }
   void Turn_Right()
   {
-  	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, 0);
+  	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR1, 100);
   	CTIMER_UpdatePwmDutycycle(CTIMER, LEFT_MOTOR2, 0);
 
 
@@ -300,3 +280,4 @@ if (xQueue1 == NULL)
   	CTIMER_UpdatePwmDutycycle(CTIMER, RIGHT_MOTOR2, 0);
 
   }
+
