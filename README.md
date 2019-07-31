@@ -15,4 +15,5 @@ step:13 try to make pixy recognize objects wit different colors with inbuilt pro
 step:14 teach pixy to detect colors and define 7 colors
 step:15 after detecting colors, try to make code of tracking algorithm for pixy and BBB
 step:16 try to run tracking algorithm
+step:17 if tracking algorithm runs, edit it to interface with LPC
 pocket beagle file
