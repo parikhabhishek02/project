@@ -16,4 +16,5 @@ step:14 teach pixy to detect colors and define 7 colors
 step:15 after detecting colors, try to make code of tracking algorithm for pixy and BBB
 step:16 try to run tracking algorithm
 step:17 if tracking algorithm runs, edit it to interface with LPC
+step:18 use UART librarry and put header file in the program and edit accordingly
 pocket beagle file
