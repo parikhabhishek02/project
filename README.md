@@ -17,5 +17,6 @@ step:15 after detecting colors, try to make code of tracking algorithm for pixy 
 step:16 try to run tracking algorithm
 step:17 if tracking algorithm runs, edit it to interface with LPC
 step:18 use UART librarry and put header file in the program and edit accordingly
-step:19 make hardware connection and connect batteries to your chasis.
+step:19 make hardware connection and connect motors to your chasis.
+step:20 look at your diff.drive code and make changes to debug without push buttons
 pocket beagle file
