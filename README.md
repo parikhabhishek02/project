@@ -19,4 +19,5 @@ step:17 if tracking algorithm runs, edit it to interface with LPC
 step:18 use UART librarry and put header file in the program and edit accordingly
 step:19 make hardware connection and connect motors to your chasis.
 step:20 look at your diff.drive code and make changes to debug without push buttons
+step:21 make tracking algorithm to interface lpc
 pocket beagle file
