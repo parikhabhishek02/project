@@ -22,5 +22,6 @@ step:20 look at your diff.drive code and make changes to debug without push butt
 step:21 make tracking algorithm to interface lpc
 step:22 interfacing can be done by either UART, SPI or GPIO
 step:23 make a uart for making the lpc code for diff. drive
+step:24 try to debug code for led blinking in LPC
 
 pocket beagle file
