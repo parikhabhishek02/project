@@ -9,6 +9,11 @@
 
 #define XMax 175
 #define XMin 125
+unsigned int width;
+unsigned int height;
+unsigned int area;
+unsigned int newarea;
+int i=0;
 
 
 Pixy2        pixy;
@@ -68,23 +73,6 @@ printf ("Success in client\n");
 
     printf ("Success\n");
   }
-
-  // Get Pixy2 Version information //
-  {
-    Result = pixy.getVersion();
-
-    if (Result < 0)
-    {
-      printf ("pixy.getVersion() returned %d\n", Result);
-      return Result;
-    }
-
-    pixy.version->print();
-  }
-
-  // Set Pixy2 to color connected components program //
-  pixy.changeProg("color_connected_components");
-
  
 
 while(1)
@@ -109,17 +97,12 @@ while(1)
 printf("x=%d/n",(pixy.ccc.blocks[Block_Index].m_x));
 
 
-
-
+nwearea = width*height;
 
 if((pixy.ccc.blocks[Block_Index].m_x)<XMin)
 {
-write(sender,"a",2);
- //if ((count = write(sender,"a",2))<0){
-   //   perror("UART: Failed to start server 1.\n");
-     // return -1;
-   //}
-printf("left= 0110\n");
+write(sender,"L",2);
+
 printf("x=%d/n",(pixy.ccc.blocks[Block_Index].m_x));
 }
 
@@ -129,14 +112,11 @@ printf("x=%d/n",(pixy.ccc.blocks[Block_Index].m_x));
 
 if((pixy.ccc.blocks[Block_Index].m_x)>XMax)
 {
-write(sender,"b",2);
- // if ((count = write(sender,"b",2))<0){
-   //   perror("UART: Failed to start server 2.\n");
-     // return -1;
-   //}
+write(sender,"R",2);
+ 
      
 printf("x=%d/n",(pixy.ccc.blocks[Block_Index].m_x));
-printf("Right= 1001\n");
+
 }
 
 
@@ -144,15 +124,19 @@ printf("Right= 1001\n");
 
 if(((pixy.ccc.blocks[Block_Index].m_x)>=XMin && (pixy.ccc.blocks[Block_Index].m_x) <=XMax))
 {
-write(sender,"c",2);
-//if ((count = write(sender,"c",2))<0){
-      //perror("UART: Failed to start server 3.\n");
-      //return -1;
-   //}
+write(sender,"F",2);
+
 printf("x=%d/n",(pixy.ccc.blocks[Block_Index].m_x));
-printf("forward=1010");
+
 }
 
+
+
+if(newarea > area)
+{
+write(sender,"S",2);
+
+}
    
 
 
